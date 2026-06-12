@@ -4,6 +4,17 @@
 class MonalisaInterativa {
     constructor() {
         this.canvas = document.querySelector('.monalisa-canvas');
+        
+        // Aguardar um pouco para garantir que o SVG está totalmente carregado
+        setTimeout(() => {
+            this.initializeEyes();
+        }, 100);
+        
+        this.maxDistance = 8; // Distância máxima que a pupila se move
+        this.init();
+    }
+
+    initializeEyes() {
         this.eyesData = [
             {
                 iris: document.querySelector('.iris-left'),
@@ -21,8 +32,7 @@ class MonalisaInterativa {
             }
         ];
 
-        this.maxDistance = 8; // Distância máxima que a pupila se move
-        this.init();
+        console.log('✨ Olhos inicializados!', this.eyesData);
     }
 
     init() {
@@ -36,10 +46,12 @@ class MonalisaInterativa {
         document.addEventListener('touchmove', (e) => this.handleTouch(e));
         document.addEventListener('touchend', () => this.resetEyes());
 
-        console.log('✨ Monalisa Interativa iniciada! Mova o mouse sobre o canvas para ver os olhos acompanharem.');
+        console.log('✨ Monalisa Interativa iniciada! Mova o mouse sobre o rosto para ver os olhos acompanharem.');
     }
 
     updateEyesPosition(event) {
+        if (!this.eyesData) return;
+
         const mouseX = event.clientX;
         const mouseY = event.clientY;
 
@@ -53,7 +65,9 @@ class MonalisaInterativa {
 
         // Atualizar cada olho
         this.eyesData.forEach((eye) => {
-            this.moveEye(eye, angle);
+            if (eye.pupil) {
+                this.moveEye(eye, angle);
+            }
         });
     }
 
@@ -62,30 +76,48 @@ class MonalisaInterativa {
         const moveX = Math.cos(angle) * this.maxDistance;
         const moveY = Math.sin(angle) * this.maxDistance;
 
-        // Atualizar posição da pupila
-        eye.pupil.setAttribute('cx', eye.centerX + moveX);
-        eye.pupil.setAttribute('cy', eye.centerY + moveY);
+        try {
+            // Atualizar posição da pupila
+            if (eye.pupil) {
+                eye.pupil.setAttribute('cx', eye.centerX + moveX);
+                eye.pupil.setAttribute('cy', eye.centerY + moveY);
+            }
 
-        // Atualizar posição do brilho (ligeiramente deslocado)
-        const brilhoX = eye.centerX + moveX * 0.6;
-        const brilhoY = eye.centerY + moveY * 0.6;
-        eye.brilho.setAttribute('cx', brilhoX);
-        eye.brilho.setAttribute('cy', brilhoY);
+            // Atualizar posição do brilho (ligeiramente deslocado)
+            if (eye.brilho) {
+                const brilhoX = eye.centerX + moveX * 0.6;
+                const brilhoY = eye.centerY + moveY * 0.6;
+                eye.brilho.setAttribute('cx', brilhoX);
+                eye.brilho.setAttribute('cy', brilhoY);
+            }
 
-        // Mover a íris ligeiramente
-        eye.iris.setAttribute('cx', eye.centerX + moveX * 0.5);
-        eye.iris.setAttribute('cy', eye.centerY + moveY * 0.5);
+            // Mover a íris ligeiramente
+            if (eye.iris) {
+                eye.iris.setAttribute('cx', eye.centerX + moveX * 0.5);
+                eye.iris.setAttribute('cy', eye.centerY + moveY * 0.5);
+            }
+        } catch (error) {
+            console.error('Erro ao mover olho:', error);
+        }
     }
 
     resetEyes() {
+        if (!this.eyesData) return;
+
         // Retornar os olhos à posição padrão
         this.eyesData.forEach((eye) => {
-            eye.pupil.setAttribute('cx', eye.centerX);
-            eye.pupil.setAttribute('cy', eye.centerY);
-            eye.brilho.setAttribute('cx', eye.centerX + 2);
-            eye.brilho.setAttribute('cy', eye.centerY - 3);
-            eye.iris.setAttribute('cx', eye.centerX);
-            eye.iris.setAttribute('cy', eye.centerY);
+            if (eye.pupil) {
+                eye.pupil.setAttribute('cx', eye.centerX);
+                eye.pupil.setAttribute('cy', eye.centerY);
+            }
+            if (eye.brilho) {
+                eye.brilho.setAttribute('cx', eye.centerX + 2);
+                eye.brilho.setAttribute('cy', eye.centerY - 3);
+            }
+            if (eye.iris) {
+                eye.iris.setAttribute('cx', eye.centerX);
+                eye.iris.setAttribute('cy', eye.centerY);
+            }
         });
     }
 
@@ -104,10 +136,11 @@ class MonalisaInterativa {
 
 // Inicializar quando o DOM estiver pronto
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🎨 DOM Carregado! Inicializando Monalisa Interativa...');
     new MonalisaInterativa();
 });
 
-// Função auxiliar para debug (opcional)
+// Função auxiliar para debug
 function logMonalisaInfo() {
     console.log('🎨 Monalisa Interativa');
     console.log('📍 Cores utilizadas:');
